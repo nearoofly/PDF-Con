@@ -88,17 +88,18 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        const imageFiles = [];
+        // Tableau pour stocker les images
+        let imageFiles = [];
 
         // Ajouter les images sélectionnées
         document.getElementById('imageInput').addEventListener('change', function(event) {
             const files = event.target.files;
             const previewContainer = document.getElementById('imagePreview');
             previewContainer.innerHTML = '';  // Réinitialiser la prévisualisation
-            imageFiles.length = 0;  // Réinitialiser le tableau des fichiers
+            imageFiles = [];  // Réinitialiser le tableau des fichiers
 
             // Ajouter chaque image à la prévisualisation et au tableau
-            for (let file of files) {
+            Array.from(files).forEach(file => {
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
@@ -110,14 +111,10 @@
                     };
                     reader.readAsDataURL(file);
                 }
-            }
+            });
 
-            // Activer le bouton de conversion si des images ont été ajoutées
-            if (imageFiles.length > 0) {
-                document.getElementById('convertBtn').disabled = false;
-            } else {
-                document.getElementById('convertBtn').disabled = true;
-            }
+            // Activer le bouton si des images sont présentes
+            document.getElementById('convertBtn').disabled = imageFiles.length === 0;
         });
 
         // Convertir les images en PDF
