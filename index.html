@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertisseur d'image en PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+
+        .preview {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #eaeaea;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:disabled {
+            background-color: #aaa;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Convertisseur d'image en PDF</h1>
+        <input type="file" id="imageInput" accept="image/*">
+        <div id="imagePreview" class="preview">
+            <p>Aucune image sélectionnée</p>
+        </div>
+        <button id="convertBtn" disabled>Convertir en PDF</button>
+        <a id="downloadLink" style="display: none;" href="" download="image.pdf">Télécharger le PDF</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.createElement('img');
+                    imgPreview.src = e.target.result;
+                    imgPreview.style.maxWidth = '100%';
+                    imgPreview.style.maxHeight = '300px';
+                    const previewContainer = document.getElementById('imagePreview');
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(imgPreview);
+                    document.getElementById('convertBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('convertBtn').addEventListener('click', function() {
+            const image = document.querySelector('#imagePreview img');
+            if (image) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.addImage(image.src, 'JPEG', 15, 40, 180, 160); // Positionner et redimensionner l'image dans le PDF
+                const pdfData = doc.output('blob');
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = URL.createObjectURL(pdfData);
+                downloadLink.style.display = 'inline-block';
+            }
+        });
+    </script>
+</body>
+</html>
