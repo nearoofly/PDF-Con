@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convertisseur d'image en PDF</title>
+    <title>Convertisseur d'images en PDF</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,7 +22,7 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
         }
 
         input[type="file"] {
@@ -34,6 +34,18 @@
             padding: 10px;
             background-color: #eaeaea;
             border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .image-item {
+            margin-bottom: 10px;
+            max-width: 100%;
+            height: auto;
+            max-height: 150px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         button {
@@ -65,46 +77,65 @@
 </head>
 <body>
     <div class="container">
-        <h1>Convertisseur d'image en PDF</h1>
-        <input type="file" id="imageInput" accept="image/*">
+        <h1>Convertisseur d'images en PDF</h1>
+        <input type="file" id="imageInput" accept="image/*" multiple>
         <div id="imagePreview" class="preview">
             <p>Aucune image sélectionnée</p>
         </div>
         <button id="convertBtn" disabled>Convertir en PDF</button>
-        <a id="downloadLink" style="display: none;" href="" download="image.pdf">Télécharger le PDF</a>
+        <a id="downloadLink" style="display: none;" href="" download="images.pdf">Télécharger le PDF</a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
+        const imageFiles = [];
+
+        // Ajouter les images sélectionnées
         document.getElementById('imageInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imgPreview = document.createElement('img');
-                    imgPreview.src = e.target.result;
-                    imgPreview.style.maxWidth = '100%';
-                    imgPreview.style.maxHeight = '300px';
-                    const previewContainer = document.getElementById('imagePreview');
-                    previewContainer.innerHTML = '';
-                    previewContainer.appendChild(imgPreview);
-                    document.getElementById('convertBtn').disabled = false;
-                };
-                reader.readAsDataURL(file);
+            const files = event.target.files;
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = '';  // Réinitialiser la prévisualisation
+            imageFiles.length = 0;  // Réinitialiser le tableau des fichiers
+
+            // Ajouter chaque image à la prévisualisation et au tableau
+            for (let file of files) {
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgPreview = document.createElement('img');
+                        imgPreview.src = e.target.result;
+                        imgPreview.classList.add('image-item');
+                        previewContainer.appendChild(imgPreview);
+                        imageFiles.push(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Activer le bouton de conversion si des images ont été ajoutées
+            if (imageFiles.length > 0) {
+                document.getElementById('convertBtn').disabled = false;
             }
         });
 
+        // Convertir les images en PDF
         document.getElementById('convertBtn').addEventListener('click', function() {
-            const image = document.querySelector('#imagePreview img');
-            if (image) {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                doc.addImage(image.src, 'JPEG', 15, 40, 180, 160); // Positionner et redimensionner l'image dans le PDF
-                const pdfData = doc.output('blob');
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = URL.createObjectURL(pdfData);
-                downloadLink.style.display = 'inline-block';
-            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Ajouter chaque image au PDF
+            imageFiles.forEach((imgData, index) => {
+                if (index > 0) {
+                    doc.addPage();  // Ajouter une nouvelle page pour chaque image sauf la première
+                }
+                doc.addImage(imgData, 'JPEG', 15, 40, 180, 160); // Positionner et redimensionner l'image
+            });
+
+            // Générer le PDF et créer un lien de téléchargement
+            const pdfData = doc.output('blob');
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(pdfData);
+            downloadLink.style.display = 'inline-block';  // Afficher le lien de téléchargement
         });
     </script>
 </body>
