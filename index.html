@@ -115,11 +115,18 @@
             // Activer le bouton de conversion si des images ont été ajoutées
             if (imageFiles.length > 0) {
                 document.getElementById('convertBtn').disabled = false;
+            } else {
+                document.getElementById('convertBtn').disabled = true;
             }
         });
 
         // Convertir les images en PDF
         document.getElementById('convertBtn').addEventListener('click', function() {
+            if (imageFiles.length === 0) {
+                alert("Veuillez sélectionner des images.");
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
