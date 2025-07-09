@@ -1,146 +1,116 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convertisseur d'images en PDF</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-
-        .preview {
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #eaeaea;
-            border-radius: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .image-item {
-            margin-bottom: 10px;
-            max-width: 100%;
-            height: auto;
-            max-height: 150px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:disabled {
-            background-color: #aaa;
-        }
-
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            font-size: 18px;
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Wickhat06pdf</title>
+ <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+ <style>
+   body {
+     margin: 0;
+     font-family: 'Roboto Mono', monospace;
+     background-color: #121212;
+     color: #f5f5f5;
+   }
+   header {
+     background-color: #1e1e1e;
+     padding: 1rem 2rem;
+     text-align: center;
+   }
+   h1 {
+     margin: 0;
+     font-size: 2rem;
+   }
+   .container {
+     max-width: 900px;
+     margin: 2rem auto;
+     padding: 2rem;
+     background-color: #1c1c1c;
+     border-radius: 10px;
+     box-shadow: 0 0 10px rgba(255,255,255,0.05);
+   }
+   label, textarea, input, button, select {
+     display: block;
+     width: 100%;
+     margin-bottom: 1rem;
+     font-size: 1rem;
+     background: #2a2a2a;
+     color: white;
+     border: none;
+     padding: 0.5rem;
+     border-radius: 5px;
+   }
+   button {
+     background-color: #555;
+     cursor: pointer;
+   }
+   button:hover {
+     background-color: #777;
+   }
+   section {
+     margin-bottom: 3rem;
+   }
+ </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Convertisseur d'images en PDF</h1>
-        <input type="file" id="imageInput" accept="image/*" multiple>
-        <div id="imagePreview" class="preview">
-            <p>Aucune image sélectionnée</p>
-        </div>
-        <button id="convertBtn" disabled>Convertir en PDF</button>
-        <a id="downloadLink" style="display: none;" href="" download="images.pdf">Télécharger le PDF</a>
-    </div>
+ <header>
+   <h1>Wickhat06pdf</h1>
+   <p>Générez des PDF, QR Codes, et plus encore !</p>
+ </header>
+ <div class="container">
+   <section id="pdf">
+     <h2>Générateur de PDF</h2>
+     <textarea id="pdfText" rows="8" placeholder="Entrez le texte à transformer en PDF..."></textarea>
+     <button onclick="generatePDF()">Télécharger PDF</button>
+   </section>
+   <section id="qr">
+     <h2>Générateur de QR Code</h2>
+     <label for="qrText">Texte ou lien</label>
+     <input type="text" id="qrText" placeholder="Texte ou URL...">
+     <label for="qrImage">Ou téléversez une image :</label>
+     <input type="file" id="qrImage">
+     <button onclick="generateQRCode()">Générer QR Code</button>
+     <div id="qrResult"></div>
+   </section>
+ </div>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+ <script>
+   async function generatePDF() {
+     const { jsPDF } = window.jspdf;
+     const doc = new jsPDF();
+     const text = document.getElementById('pdfText').value;
+     doc.text(text, 10, 10);
+     doc.save("document.pdf");
+   }
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
-        // Tableau pour stocker les images
-        let imageFiles = [];
+   function generateQRCode() {
+     const qrContainer = document.getElementById('qrResult');
+     qrContainer.innerHTML = "";
+     const text = document.getElementById('qrText').value;
+     const image = document.getElementById('qrImage').files[0];
 
-        // Ajouter les images sélectionnées
-        document.getElementById('imageInput').addEventListener('change', function(event) {
-            const files = event.target.files;
-            const previewContainer = document.getElementById('imagePreview');
-            previewContainer.innerHTML = '';  // Réinitialiser la prévisualisation
-            imageFiles = [];  // Réinitialiser le tableau des fichiers
-
-            // Ajouter chaque image à la prévisualisation et au tableau
-            Array.from(files).forEach(file => {
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imgPreview = document.createElement('img');
-                        imgPreview.src = e.target.result;
-                        imgPreview.classList.add('image-item');
-                        previewContainer.appendChild(imgPreview);
-                        imageFiles.push(e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Activer le bouton si des images sont présentes
-            document.getElementById('convertBtn').disabled = imageFiles.length === 0;
-        });
-
-        // Convertir les images en PDF
-        document.getElementById('convertBtn').addEventListener('click', function() {
-            if (imageFiles.length === 0) {
-                alert("Veuillez sélectionner des images.");
-                return;
-            }
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // Ajouter chaque image au PDF
-            imageFiles.forEach((imgData, index) => {
-                if (index > 0) {
-                    doc.addPage();  // Ajouter une nouvelle page pour chaque image sauf la première
-                }
-                doc.addImage(imgData, 'JPEG', 15, 40, 180, 160); // Positionner et redimensionner l'image
-            });
-
-            // Générer le PDF et créer un lien de téléchargement
-            const pdfData = doc.output('blob');
-            const downloadLink = document.getElementById('downloadLink');
-            downloadLink.href = URL.createObjectURL(pdfData);
-            downloadLink.style.display = 'inline-block';  // Afficher le lien de téléchargement
-        });
-    </script>
+     if (text) {
+       new QRCode(qrContainer, {
+         text: text,
+         width: 200,
+         height: 200,
+         colorDark: "#ffffff",
+         colorLight: "#2a2a2a",
+       });
+     } else if (image) {
+       const reader = new FileReader();
+       reader.onload = function (e) {
+         const img = document.createElement("img");
+         img.src = e.target.result;
+         img.style.width = "200px";
+         qrContainer.appendChild(img);
+       };
+       reader.readAsDataURL(image);
+     } else {
+       qrContainer.innerHTML = "<p style='color: red;'>Veuillez entrer un texte ou sélectionner une image.</p>";
+     }
+   }
+ </script>
 </body>
 </html>
