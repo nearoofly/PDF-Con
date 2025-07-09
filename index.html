@@ -50,19 +50,38 @@
    section {
      margin-bottom: 3rem;
    }
+   #qrResult img, #qrResult canvas {
+     display: block;
+     margin: 1rem auto;
+   }
  </style>
 </head>
 <body>
  <header>
    <h1>Wickhat06pdf</h1>
-   <p>Générez des PDF, QR Codes, et plus encore !</p>
+   <p>Convertir texte ou lien en PDF • Créer des QR codes avec texte ou image</p>
  </header>
  <div class="container">
    <section id="pdf">
      <h2>Générateur de PDF</h2>
+     <label for="inputType">Choisissez le type d'entrée :</label>
+     <select id="inputType" onchange="toggleInputFields()">
+       <option value="text">Texte</option>
+       <option value="link">Lien</option>
+     </select>
+
      <textarea id="pdfText" rows="8" placeholder="Entrez le texte à transformer en PDF..."></textarea>
-     <button onclick="generatePDF()">Télécharger PDF</button>
+     <input type="text" id="pdfLink" placeholder="Entrez un lien à convertir..." style="display: none;">
+
+     <label for="format">Format souhaité :</label>
+     <select id="format">
+       <option value="pdf">PDF</option>
+       <option value="txt">TXT</option>
+       <option value="doc">DOC</option>
+     </select>
+     <button onclick="generateFile()">Télécharger</button>
    </section>
+
    <section id="qr">
      <h2>Générateur de QR Code</h2>
      <label for="qrText">Texte ou lien</label>
@@ -71,17 +90,50 @@
      <input type="file" id="qrImage">
      <button onclick="generateQRCode()">Générer QR Code</button>
      <div id="qrResult"></div>
+     <button onclick="downloadQRCode()">Télécharger le QR Code</button>
    </section>
  </div>
+
  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script>
-   async function generatePDF() {
+   function toggleInputFields() {
+     const type = document.getElementById('inputType').value;
+     document.getElementById('pdfText').style.display = type === 'text' ? 'block' : 'none';
+     document.getElementById('pdfLink').style.display = type === 'link' ? 'block' : 'none';
+   }
+
+   async function generateFile() {
      const { jsPDF } = window.jspdf;
-     const doc = new jsPDF();
-     const text = document.getElementById('pdfText').value;
-     doc.text(text, 10, 10);
-     doc.save("document.pdf");
+     const type = document.getElementById('inputType').value;
+     const format = document.getElementById('format').value;
+     let content = type === 'text'
+       ? document.getElementById('pdfText').value
+       : document.getElementById('pdfLink').value;
+
+     if (!content) {
+       alert("Veuillez entrer du contenu à convertir.");
+       return;
+     }
+
+     if (format === 'pdf') {
+       const doc = new jsPDF();
+       const lines = doc.splitTextToSize(content, 180);
+       doc.text(lines, 10, 10);
+       doc.save("document.pdf");
+     } else if (format === 'txt') {
+       const blob = new Blob([content], { type: "text/plain" });
+       const link = document.createElement("a");
+       link.href = URL.createObjectURL(blob);
+       link.download = "document.txt";
+       link.click();
+     } else if (format === 'doc') {
+       const blob = new Blob([content], { type: "application/msword" });
+       const link = document.createElement("a");
+       link.href = URL.createObjectURL(blob);
+       link.download = "document.doc";
+       link.click();
+     }
    }
 
    function generateQRCode() {
@@ -109,6 +161,26 @@
        reader.readAsDataURL(image);
      } else {
        qrContainer.innerHTML = "<p style='color: red;'>Veuillez entrer un texte ou sélectionner une image.</p>";
+     }
+   }
+
+   function downloadQRCode() {
+     const qrContainer = document.getElementById('qrResult');
+     const img = qrContainer.querySelector('img');
+     const canvas = qrContainer.querySelector('canvas');
+
+     if (img) {
+       const link = document.createElement('a');
+       link.href = img.src;
+       link.download = "qr_image.png";
+       link.click();
+     } else if (canvas) {
+       const link = document.createElement('a');
+       link.href = canvas.toDataURL("image/png");
+       link.download = "qrcode.png";
+       link.click();
+     } else {
+       alert("Aucun QR Code à télécharger !");
      }
    }
  </script>
